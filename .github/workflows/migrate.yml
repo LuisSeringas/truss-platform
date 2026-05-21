@@ -1,0 +1,31 @@
+# Run database migrations against production.
+# Trigger manually from GitHub Actions → "Run workflow".
+# Requires DATABASE_URL secret set in GitHub repo settings.
+name: DB migrate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Run migrations
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: pnpm db:migrate

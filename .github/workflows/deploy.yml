@@ -1,53 +1,29 @@
-name: Deploy
+# Deployment is handled by Vercel's GitHub integration.
+# Every push to main triggers an automatic production deploy.
+# PRs get preview deployments automatically.
+#
+# To connect: go to vercel.com → New Project → import LuisSeringas/truss-platform
+# Set env vars in Vercel project settings (see .env.example).
+#
+# This workflow runs a smoke check after each Vercel deployment.
+name: Post-deploy smoke
 
 on:
-  push:
-    branches: [main]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  deployment_status:
 
 jobs:
-  build:
-    name: Build
+  smoke:
+    name: Smoke test
+    if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: out/
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Check homepage responds
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+          echo "Response: $STATUS for $DEPLOY_URL"
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "307" ] && [ "$STATUS" != "302" ]; then
+            echo "Unexpected status $STATUS — deploy may have succeeded but app is broken"
+            exit 1
+          fi
