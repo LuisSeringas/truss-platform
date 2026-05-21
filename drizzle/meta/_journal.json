@@ -15,6 +15,13 @@
       "when": 1779354293556,
       "tag": "0001_stiff_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779355088348,
+      "tag": "0002_common_morbius",
+      "breakpoints": true
     }
   ]
 }

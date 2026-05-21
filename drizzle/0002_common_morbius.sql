@@ -1,0 +1,1 @@
+ALTER TABLE "rationales" ADD COLUMN "entry_id" uuid DEFAULT gen_random_uuid() NOT NULL;

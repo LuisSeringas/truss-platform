@@ -33,12 +33,15 @@ export const files = pgTable('files', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Each row is one version of a rationale entry. A rationale belongs to exactly
+// Each row is one revision of a rationale entry. A rationale belongs to exactly
 // one parent (project XOR file) — enforced by the DB check constraint.
+// entryId groups all revisions of the same logical entry.
 export const rationales = pgTable(
   'rationales',
   {
     id: uuid('id').defaultRandom().primaryKey(),
+    // Groups all revisions of the same logical entry. Set equal to id on first revision.
+    entryId: uuid('entry_id').notNull().defaultRandom(),
     projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
     fileId: uuid('file_id').references(() => files.id, { onDelete: 'cascade' }),
     body: text('body').notNull(),
