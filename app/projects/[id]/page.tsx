@@ -79,7 +79,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <li key={file.id} className="px-5 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                      <Link
+                        href={`/projects/${id}/files/${file.id}`}
+                        className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                      >
+                        {file.name}
+                      </Link>
                       <p className="text-xs text-gray-400 mt-0.5">
                         {formatBytes(file.sizeBytes)}
                         {file.sizeBytes ? ' · ' : ''}

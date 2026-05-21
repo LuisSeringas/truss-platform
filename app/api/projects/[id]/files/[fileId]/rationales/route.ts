@@ -7,6 +7,7 @@ import {
   getFileById,
   getLatestRationalesByFile,
   getProjectById,
+  touchProject,
 } from '@/lib/db/repository';
 
 type Params = { params: Promise<{ id: string; fileId: string }> };
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     version: 1,
     createdBy: session.user.id,
   });
+
+  await touchProject(db, id);
 
   return NextResponse.json(entry, { status: 201 });
 }

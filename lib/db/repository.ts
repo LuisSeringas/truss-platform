@@ -1,4 +1,4 @@
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, ilike, or, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { files, projects, rationales, users } from './schema';
 import type { NewFile, NewProject, NewRationale, NewUser } from './schema';
@@ -29,8 +29,86 @@ export function getProjectById(db: DB, id: string) {
 }
 
 export function getProjectsByOwner(db: DB, ownerId: string) {
-  return db.select().from(projects).where(eq(projects.ownerId, ownerId));
+  return db
+    .select()
+    .from(projects)
+    .where(eq(projects.ownerId, ownerId))
+    .orderBy(desc(projects.updatedAt));
 }
+
+export function touchProject(db: DB, projectId: string) {
+  return db
+    .update(projects)
+    .set({ updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+}
+
+export async function searchForUser(db: DB, ownerId: string, q: string) {
+  const pattern = `%${q.trim()}%`;
+  const lower = q.trim().toLowerCase();
+
+  const userProjects = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.ownerId, ownerId))
+    .orderBy(desc(projects.updatedAt));
+
+  const projectIds = userProjects.map((p) => p.id);
+
+  const matchingProjects = userProjects.filter(
+    (p) =>
+      p.name.toLowerCase().includes(lower) ||
+      (p.description?.toLowerCase() ?? '').includes(lower),
+  );
+
+  if (projectIds.length === 0) {
+    return { projects: matchingProjects, rationales: [] as RationaleSearchRow[] };
+  }
+
+  const rows = await db
+    .select({
+      id: rationales.id,
+      entryId: rationales.entryId,
+      projectId: rationales.projectId,
+      fileId: rationales.fileId,
+      body: rationales.body,
+      version: rationales.version,
+      createdAt: rationales.createdAt,
+      fileProjectId: files.projectId,
+    })
+    .from(rationales)
+    .leftJoin(files, eq(rationales.fileId, files.id))
+    .where(
+      and(
+        ilike(rationales.body, pattern),
+        or(inArray(rationales.projectId, projectIds), inArray(files.projectId, projectIds)),
+      ),
+    )
+    .orderBy(rationales.entryId, desc(rationales.version));
+
+  // Keep highest version per entryId
+  const seen = new Set<string>();
+  const matchingRationales: RationaleSearchRow[] = [];
+  for (const r of rows) {
+    if (seen.has(r.entryId)) continue;
+    seen.add(r.entryId);
+    matchingRationales.push({ ...r, resolvedProjectId: r.projectId ?? r.fileProjectId! });
+  }
+
+  return { projects: matchingProjects, rationales: matchingRationales };
+}
+
+type RationaleSearchRow = {
+  id: string;
+  entryId: string;
+  projectId: string | null;
+  fileId: string | null;
+  body: string;
+  version: number;
+  createdAt: Date;
+  fileProjectId: string | null;
+  resolvedProjectId: string;
+};
 
 // Files
 export function createFile(db: DB, data: NewFile) {

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { createRationale, getLatestRationalesByProject, getProjectById } from '@/lib/db/repository';
+import { createRationale, getLatestRationalesByProject, getProjectById, touchProject } from '@/lib/db/repository';
 
 async function resolveProject(projectId: string, userId: string) {
   const project = await getProjectById(db, projectId);
@@ -52,6 +52,8 @@ export async function POST(
     version: 1,
     createdBy: session.user.id,
   });
+
+  await touchProject(db, id);
 
   return NextResponse.json(entry, { status: 201 });
 }
