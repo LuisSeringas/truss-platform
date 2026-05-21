@@ -8,6 +8,13 @@
       "when": 1779354012142,
       "tag": "0000_round_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779354293556,
+      "tag": "0001_stiff_black_cat",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,10 @@ export function getUserById(db: DB, id: string) {
   return db.select().from(users).where(eq(users.id, id)).then((rows) => rows[0] ?? null);
 }
 
+export function getUserByEmail(db: DB, email: string) {
+  return db.select().from(users).where(eq(users.email, email)).then((rows) => rows[0] ?? null);
+}
+
 // Projects
 export function createProject(db: DB, data: NewProject) {
   return db.insert(projects).values(data).returning();
