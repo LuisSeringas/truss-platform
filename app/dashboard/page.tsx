@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
@@ -40,17 +41,19 @@ export default async function DashboardPage() {
         ) : (
           <ul className="space-y-3">
             {projects.map((project) => (
-              <li
-                key={project.id}
-                className="rounded-lg border border-gray-200 bg-white px-5 py-4"
-              >
-                <p className="font-medium text-gray-900">{project.name}</p>
-                {project.description && (
-                  <p className="text-sm text-gray-500 mt-1">{project.description}</p>
-                )}
-                <p className="text-xs text-gray-400 mt-2">
-                  Created {new Date(project.createdAt).toLocaleDateString()}
-                </p>
+              <li key={project.id}>
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="block rounded-lg border border-gray-200 bg-white px-5 py-4 hover:border-gray-300 hover:shadow-sm transition-shadow"
+                >
+                  <p className="font-medium text-gray-900">{project.name}</p>
+                  {project.description && (
+                    <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-2">
+                    Created {new Date(project.createdAt).toLocaleDateString()}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>
